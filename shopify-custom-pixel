@@ -1,0 +1,303 @@
+// start of settings
+const gtm_container_id = 'GTM-MJPX288K'; // GTM-XXXXXXX
+const track_cart_viewed = true;
+const track_checkout_completed = true;
+const track_checkout_shipping_info_submitted = true;
+const track_checkout_started = true;
+const track_clicks = false; // currently works only at the checkout
+const track_input_changed = false; // currently works only at the checkout
+const track_page_viewed = true;
+const track_payment_info_submitted = true;
+const track_product_added_to_cart = true;
+const track_product_removed_from_cart = true;
+const track_product_viewed = true;
+const track_search_submitted = true;
+// end of settings
+
+//Store the clean page url (and other things) before GTM loads
+window.dataLayer = window.dataLayer || [];
+dataLayer.push({
+  page_location : init.context.document?.location?.href,
+  page_referrer : init.context.document?.referrer,
+  page_title : init.context.document?.title,
+});
+
+// Insert GTM container
+(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer', gtm_container_id);
+
+if (track_cart_viewed){
+  analytics.subscribe('cart_viewed', (event) => {
+    console.log('cart_viewed', event);
+    dataLayer.push({ ecommerce: null });
+    const items = event.data?.cart?.lines?.map((item) => {
+      return {
+        item_id : item.merchandise.product.id,
+        item_name : item.merchandise.product.title,
+        price : item.merchandise.price.amount,
+        quantity : item.quantity
+      }
+    });
+    dataLayer.push({
+      event : 'view_cart',
+      page_location : event.context?.document?.location?.href,
+      page_referrer : event.context?.document?.referrer,
+      page_title : event.context?.document?.title,
+      ecommerce : {
+        currency : event.data?.cart?.cost?.totalAmount?.currencyCode,
+        value : event.data?.cart?.cost?.totalAmount?.amount,
+        items : items
+      }
+    });
+  });
+}
+
+if (track_checkout_completed){
+  analytics.subscribe('checkout_completed', (event) => {
+    console.log('checkout_completed', event);
+    dataLayer.push({ ecommerce: null });
+    const items = event.data?.checkout?.lineItems?.map((item) => {
+      return {
+        item_id : item.variant.product.id,
+        item_name : item.variant.product.title,
+        price : item.variant.price.amount,
+        quantity : item.quantity
+      }
+    });
+    dataLayer.push({
+      event : 'purchase',
+      email : event.data?.checkout?.email,
+      page_location : event.context?.document?.location?.href,
+      page_referrer : event.context?.document?.referrer,
+      page_title : event.context?.document?.title,
+      ecommerce : {
+        currency : event.data?.checkout?.currencyCode,
+        value : event.data?.checkout?.subtotalPrice?.amount,
+        transaction_id : event.data?.checkout?.order?.id,
+        coupon : event.data?.checkout?.discountApplications[0]?.title,
+        shipping : event.data?.checkout?.shippingLine?.price?.amount,
+        tax : event.data?.checkout?.totalTax?.amount,
+        shipping_tier : event.data?.checkout?.delivery?.selectedDeliveryOptions[0]?.title,
+        items : items
+      }
+    });
+  });
+}
+
+if (track_checkout_shipping_info_submitted){
+  analytics.subscribe('checkout_shipping_info_submitted', (event) => {
+    console.log('checkout_shipping_info_submitted', event);
+    dataLayer.push({ ecommerce: null });
+    const items = event.data?.checkout?.lineItems?.map((item) => {
+      return {
+        item_id : item.variant.product.id,
+        item_name : item.variant.product.title,
+        price : item.variant.price.amount,
+        quantity : item.quantity
+      }
+    });
+    dataLayer.push({
+      event : 'add_shipping_info',
+      email : event.data?.checkout?.email,
+      page_location : event.context?.document?.location?.href,
+      page_referrer : event.context?.document?.referrer,
+      page_title : event.context?.document?.title,
+      ecommerce : {
+        shipping_tier : event.data?.checkout?.delivery?.selectedDeliveryOptions[0]?.title,
+        currency : event.data?.checkout?.currencyCode,
+        value : event.data?.checkout?.subtotalPrice?.amount,
+        items : items
+      }
+    });
+  });
+}
+
+if (track_checkout_started){
+  analytics.subscribe('checkout_started', (event) => {
+    console.log('checkout_started', event);
+    dataLayer.push({ ecommerce: null });
+    const items = event.data?.checkout?.lineItems?.map((item) => {
+      return {
+        item_id : item.variant.product.id,
+        item_name : item.variant.product.title,
+        price : item.variant.price.amount,
+        quantity : item.quantity
+      }
+    });
+    dataLayer.push({
+      event: 'begin_checkout',
+      page_location : event.context?.document?.location?.href,
+      page_referrer : event.context?.document?.referrer,
+      page_title : event.context?.document?.title,
+      ecommerce : {
+        currency : event.data?.checkout?.currencyCode,
+        value : event.data?.checkout?.subtotalPrice?.amount,
+        items : items
+      }
+    });
+  });
+}
+
+if (track_clicks){
+  analytics.subscribe('clicked', (event) => {
+    console.log('clicked', event);
+    dataLayer.push({
+      event : 'shopify_click',
+      element_id : event.data?.element?.id,
+      element_tag_name : event.data?.element?.tagName,
+      element_type : event.data?.element?.type,
+      element_value : event.data?.element?.value,
+      page_location : event.context?.document?.location?.href,
+      page_referrer : event.context?.document?.referrer,
+      page_title : event.context?.document?.title
+    });
+  });
+}
+
+if (track_input_changed){
+  analytics.subscribe('input_changed', (event) => {
+    console.log('input_changed', event);
+    dataLayer.push({
+      event : 'shopify_input_changed',
+      element_id : event.data?.element?.id,
+      element_tag_name : event.data?.element?.tagName,
+      element_type : event.data?.element?.type,
+      element_value : event.data?.element?.value,
+      page_location : event.context?.document?.location?.href,
+      page_referrer : event.context?.document?.referrer,
+      page_title : event.context?.document?.title
+    });
+  });
+}
+
+
+if (track_page_viewed){
+  analytics.subscribe('page_viewed', (event) => {
+    console.log('page_viewed', event);
+    dataLayer.push({
+      event : 'shopify_page_view',
+      page_location : event.context?.document?.location?.href,
+      page_referrer : event.context?.document?.referrer,
+      page_title : event.context?.document?.title,
+    });
+  });
+}
+
+if (track_payment_info_submitted){
+  analytics.subscribe('payment_info_submitted', (event) => {
+    console.log('payment_info_submitted', event);
+    dataLayer.push({ ecommerce: null });
+    const items = event.data?.checkout?.lineItems?.map((item) => {
+      return {
+        item_id : item.variant.product.id,
+        item_name : item.variant.product.title,
+        price : item.variant.price.amount,
+        quantity : item.quantity
+      }
+    });
+    dataLayer.push({
+      event : 'add_payment_info',
+      email : event.data?.checkout?.email,
+      page_location : event.context?.document?.location?.href,
+      page_referrer : event.context?.document?.referrer,
+      page_title : event.context?.document?.title,
+      ecommerce : {
+        payment_type : event,
+        currency : event.data?.checkout?.currencyCode,
+        value : event.data?.checkout?.subtotalPrice?.amount,
+        items : items
+      }
+    });
+  });
+}
+
+if (track_product_added_to_cart){
+  analytics.subscribe('product_added_to_cart', (event) => {
+    console.log('product_added_to_cart', event);
+    dataLayer.push({ ecommerce: null });
+    dataLayer.push({
+      event : 'add_to_cart',
+      page_location : event.context?.document?.location?.href,
+      page_referrer : event.context?.document?.referrer,
+      page_title : event.context?.document?.title,
+      ecommerce : {
+        currency : event.data?.cartLine?.cost?.totalAmount?.currencyCode,
+        value : event.data?.cartLine?.cost?.totalAmount?.amount,
+        items : [
+        {
+          item_id : event.data?.cartLine?.merchandise?.product?.id,
+          item_name : event.data?.cartLine?.merchandise?.product?.title,
+          price : event.data?.cartLine?.merchandise?.price?.amount,
+          quantity : event.data?.cartLine?.quantity
+        }
+        ]
+      }
+    });
+  });
+}
+
+if (track_product_removed_from_cart){
+  analytics.subscribe('product_removed_from_cart', (event) => {
+    console.log('product_removed_from_cart', event);
+    dataLayer.push({ ecommerce: null });
+    dataLayer.push({
+      event: 'remove_from_cart',
+      page_location : event.context?.document?.location?.href,
+      page_referrer : event.context?.document?.referrer,
+      page_title : event.context?.document?.title,
+      ecommerce : {
+        currency : event.data?.cartLine?.cost?.totalAmount?.currencyCode,
+        value : event.data?.cartLine?.cost?.totalAmount?.amount,
+        items : [
+        {
+          item_id : event.data?.cartLine?.merchandise?.product?.id,
+          item_name : event.data?.cartLine?.merchandise?.product?.title,
+          price : event.data?.cartLine?.merchandise?.price?.amount,
+          quantity : event.data?.cartLine?.quantity
+        }
+        ]
+      }
+    });
+  });
+}
+
+if (track_product_viewed){
+  analytics.subscribe('product_viewed', (event) => {
+    console.log('product_viewed', event);
+    dataLayer.push({ ecommerce: null });
+    dataLayer.push({
+      event : 'view_item',
+      page_location : event.context?.document?.location?.href,
+      page_referrer : event.context?.document?.referrer,
+      page_title : event.context?.document?.title,
+      ecommerce : {
+        currency : event.data?.productVariant?.price?.currencyCode,
+        value : event.data?.productVariant?.price?.amount,
+        items : [
+        {
+          item_id : event.data?.productVariant?.product?.id,
+          item_name : event.data?.productVariant?.product?.title,
+          price : event.data?.productVariant?.price?.amount,
+          quantity : 1
+        }
+        ]
+      }
+    });
+  });
+}
+
+if (track_search_submitted){
+  analytics.subscribe('search_submitted', (event) => {
+    console.log('search_submitted', event);
+    dataLayer.push({
+      event : 'shopify_site_search',
+      page_location : event.context?.document?.location?.href,
+      page_referrer : event.context?.document?.referrer,
+      page_title : event.context?.document?.title,
+      search_keyword : event.data?.searchResult?.query
+    });
+  });
+}
